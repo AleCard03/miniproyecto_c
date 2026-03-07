@@ -58,7 +58,7 @@ int main()
         }
     }
 
-    //Centrar la Matriz (X - mu)
+    //Paso 1 - Centrar la Matriz (X - mu)
     VectorXd medias = X.colwise().mean();
     MatrixXd XCentrada = X.rowwise() - medias.transpose();
 
@@ -74,10 +74,10 @@ int main()
         Z.col(j) = XCentrada.col(j).array() / std_dev(j);
     }
 
-    //Calcular la Matriz de Covarianza
+    //Paso 2 - Calcular la Matriz de Covarianza
     MatrixXd R = (Z.transpose() * Z) / (n - 1);
 
-    //Calcular Eigenvectors y Eigenvalues
+    //Paso 3 y 4 - Calcular Eigenvectors y Eigenvalues
     SelfAdjointEigenSolver<MatrixXd> solver(R);
     if (solver.info() != Success) {
         cerr << "Fallo al calcular los eigenvalores." << endl;
@@ -91,8 +91,23 @@ int main()
     VectorXd eigenvals_desc = eigenvals_asc.reverse();
     MatrixXd eigenvecs_desc = eigenvecs_asc.rowwise().reverse();
 
-    //Proyeccion
+    //Paso 5 - Proyeccion - Z equivale a C en el codigo de Python
     MatrixXd Z_proyectada = Z * eigenvecs_desc;
+
+    //Paso 6 - Calculo de Matriz de Calidades
+    //distancias_estudiantes es un vector con la suma de Z squared por filas
+    VectorXd distancias_estudiantes = Z.rowwise().squaredNorm();
+    MatrixXd Q = Z_proyectada.array().square().colwise() / distancias_estudiantes.array();
+
+    //Paso 7 - Calcular la matriz de coordenada de las variables
+    MatrixXd T = eigenvecs_desc.array().rowwise() * eigenvals_desc.transpose().array().sqrt();
+
+    //Paso 8 - Calcular la matriz de calidades de las variables
+    //T_squared es un vector con la suma de Z squared por filas
+    VectorXd T_squared = T.rowwise().squaredNorm();
+    MatrixXd S = T.array().square().colwise() / T_squared.array(); 
+
+    //Paso 9 - Calcular el vector de inerccias
     VectorXd varianza_explicada = eigenvals_desc.array() / eigenvals_desc.sum();
     VectorXd inercia_acumulada(varianza_explicada.size());
     double acumulado = 0.0;
