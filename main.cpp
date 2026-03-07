@@ -53,7 +53,7 @@ int main()
     //Se llena la matriz con los valores cargados del csv
     MatrixXd X(n,m);
     for(int i = 0; i < n; i++){
-        for(int j = 0; j < m; i++){
+        for(int j = 0; j < m; j++){
             X(i,j) = datos[i][j];
         }
     }
@@ -78,7 +78,6 @@ int main()
     MatrixXd R = (Z.transpose() * Z) / (n - 1);
 
     //Calcular Eigenvectors y Eigenvalues
-    //Usamos SelfAdjointEigenSolver porque R es una matriz simétrica.
     SelfAdjointEigenSolver<MatrixXd> solver(R);
     if (solver.info() != Success) {
         cerr << "Fallo al calcular los eigenvalores." << endl;
@@ -88,4 +87,26 @@ int main()
     //Eigen devuelve los valores en orden ascendente. 
     VectorXd eigenvals_asc = solver.eigenvalues();
     MatrixXd eigenvecs_asc = solver.eigenvectors();
+
+    VectorXd eigenvals_desc = eigenvals_asc.reverse();
+    MatrixXd eigenvecs_desc = eigenvecs_asc.rowwise().reverse();
+
+    //Proyeccion
+    MatrixXd Z_proyectada = Z * eigenvecs_desc;
+    VectorXd varianza_explicada = eigenvals_desc.array() / eigenvals_desc.sum();
+    VectorXd inercia_acumulada(varianza_explicada.size());
+    double acumulado = 0.0;
+    for (int i = 0; i < varianza_explicada.size(); ++i) {
+        acumulado += varianza_explicada(i);
+        inercia_acumulada(i) = acumulado;
+    }
+    printf("Varianza explicada por cada componente:\n");
+    for (int i = 0; i < varianza_explicada.size(); ++i) {
+        printf("Componente %d: %.4f%%\n", i + 1, varianza_explicada(i) * 100);
+    }
+    printf("\nInercia acumulada:\n");
+    for (int i = 0; i < inercia_acumulada.size(); ++i) {
+        printf("Componente %d: %.4f%%\n", i + 1, inercia_acumulada(i) * 100);
+    } 
+
 }
