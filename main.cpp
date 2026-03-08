@@ -21,14 +21,25 @@ double stringToDouble(string s){
 int main()
 {
     vector<string> names;
+    vector<string> materias;
     vector<vector<double>> datos;
     string filename = "./EjemploEstudiantes.csv";
     ifstream file(filename);
     string line;
 
-    //Este getline es para saltarnos la primera linea que contiene las materias
+    //leer la primera linea de materias
     getline(file,line);
+    stringstream headerStream(line);
+    string header;
 
+
+    getline(headerStream, header, ';'); // saltar primera columna
+
+    while (getline(headerStream, header, ';')) {
+        materias.push_back(header);
+    }
+
+    //Leer datos
     while(getline(file,line)){
         stringstream inputStream(line);
         string name, valor;
@@ -124,4 +135,36 @@ int main()
         printf("Componente %d: %.4f%%\n", i + 1, inercia_acumulada(i) * 100);
     } 
 
+    ofstream estudiantes("estudiantes.dat"); for (int i = 0; i < n; i++) { 
+        estudiantes << Z_proyectada(i, 0) << " " << Z_proyectada(i, 1) << " " << names[i] << endl; 
+    } 
+    estudiantes.close();
+
+    ofstream variables("variables.dat");
+    ofstream variables_labels("variables_labels.dat");
+
+    for (int j = 0; j < m; j++) {
+        // Coordenadas de la flecha
+        variables << 0 << " " << 0 << " " << T(j, 0) << " " << T(j, 1) << endl;
+
+        // Posición final de la flecha para la etiqueta
+        variables_labels << T(j, 0) << " " << T(j, 1) << " " << materias[j] << endl;
+    }
+
+    variables.close();
+    variables_labels.close();
+
+    ofstream f_variables("variables_circle.dat");
+    ofstream f_variables_labels("variables_circle_labels.dat");
+
+    for (int j = 0; j < m; j++) {
+        // Flecha desde origen (0,0)
+        f_variables << 0 << " " << 0 << " " << T(j, 0) << " " << T(j, 1) << endl;
+
+        // Etiqueta al final de la flecha
+        f_variables_labels << T(j, 0) << " " << T(j, 1) << " " << materias[j] << endl;
+    }
+
+    f_variables.close();
+    f_variables_labels.close();
 }
